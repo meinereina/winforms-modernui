@@ -32,6 +32,14 @@ using MetroFramework.Interfaces;
 
 namespace MetroFramework.Controls
 {
+    #region Enums
+    public enum Orientation
+    {
+        Horizontal,
+        Vertical
+    }
+    #endregion
+    
     [ToolboxBitmap(typeof(TrackBar))]
     [DefaultEvent("Scroll")]
     public class MetroTrackBar : Control, IMetroControl
@@ -290,6 +298,14 @@ namespace MetroFramework.Controls
             }
         }
 
+        private Orientation orientation = Orientation.Horizontal;
+        [DefaultValue(Orientation.Horizontal)]
+        public Orientation Orientation
+        {
+            get { return orientation; }
+            set { orientation = value; }
+        }
+        
         private bool isHovered = false;
         private bool isPressed = false;
         private bool isFocused = false;
@@ -399,21 +415,43 @@ namespace MetroFramework.Controls
 
         private void DrawTrackBar(Graphics g, Color thumbColor, Color barColor)
         {
-            int TrackX = (((trackerValue - barMinimum) * (Width - 6)) / (barMaximum - barMinimum));
-
-            using (SolidBrush b = new SolidBrush(thumbColor))
+            if (orientation == MetroFramework.Controls.Orientation.Horizontal)
             {
-                Rectangle barRect = new Rectangle(0, Height / 2 - 2, TrackX, 4);
-                g.FillRectangle(b, barRect);
+                int TrackX = (((trackerValue - barMinimum) * (Width - 6)) / (barMaximum - barMinimum));
 
-                Rectangle thumbRect = new Rectangle(TrackX, Height / 2 - 8, 6, 16);
-                g.FillRectangle(b, thumbRect);
+                using (SolidBrush b = new SolidBrush(thumbColor))
+                {
+                    Rectangle barRect = new Rectangle(0, Height / 2 - 2, TrackX, 4);
+                    g.FillRectangle(b, barRect);
+
+                    Rectangle thumbRect = new Rectangle(TrackX, Height / 2 - 8, 6, 16);
+                    g.FillRectangle(b, thumbRect);
+                }
+
+                using (SolidBrush b = new SolidBrush(barColor))
+                {
+                    Rectangle barRect = new Rectangle(TrackX + 7, Height / 2 - 2, Width - TrackX + 7, 4);
+                    g.FillRectangle(b, barRect);
+                }
             }
-
-            using (SolidBrush b = new SolidBrush(barColor))
+            else
             {
-                Rectangle barRect = new Rectangle(TrackX + 7, Height / 2 - 2, Width - TrackX + 7, 4);
-                g.FillRectangle(b, barRect);
+                int TrackY = (((trackerValue - barMinimum) * (Height - 6)) / (barMaximum - barMinimum));
+
+                using (SolidBrush b = new SolidBrush(thumbColor))
+                {
+                    Rectangle barRect = new Rectangle(Width / 2 - 2, Height - TrackY, 4, TrackY);
+                    g.FillRectangle(b, barRect);
+
+                    Rectangle thumbRect = new Rectangle(Width / 2 - 8, Height - TrackY-6, 16, 6);
+                    g.FillRectangle(b, thumbRect);
+                }
+
+                using (SolidBrush b = new SolidBrush(barColor))
+                {
+                    Rectangle barRect = new Rectangle(Width / 2 - 2, 0, 4, Height - TrackY - 7);
+                    g.FillRectangle(b, barRect);
+                }
             }
         }
 
@@ -566,10 +604,19 @@ namespace MetroFramework.Controls
             {
                 ScrollEventType set = ScrollEventType.ThumbPosition;
                 Point pt = e.Location;
-                int p = pt.X;
                 
-                float coef = (float)(barMaximum - barMinimum) / (float)(ClientSize.Width - 3);
-                trackerValue = (int)(p * coef + barMinimum);
+                if (orientation == MetroFramework.Controls.Orientation.Horizontal)
+                {
+                    int p = pt.X;
+                    float coef = (float)(barMaximum - barMinimum) / (float)(ClientSize.Width - 3);
+                    trackerValue = (int)(p * coef + barMinimum);
+                }
+                else
+                {
+                    int p = Height - pt.Y;
+                    float coef = (float)(barMaximum - barMinimum) / (float)(ClientSize.Height - 3);
+                    trackerValue = (int)(p * coef + barMinimum);
+                }
 
                 if (trackerValue <= barMinimum)
                 {
